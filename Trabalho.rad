@@ -1,0 +1,154 @@
+org hba ;minhas variáveis
+loopCont: db 
+numCont: db
+widDaTriplaTemp: db
+somaTemp: db
+resultTemp: db
+
+org hc0 ;variáveis obrigatórias
+adq: db
+des: db
+hig: db 
+wid: db 
+num: db 
+
+
+
+org 0 ;Programa até hbf
+;zerando variáveis e declarações iniciais
+ldr a, #19
+str a, loopCont
+ldr a, #0
+str a, adq
+str a, des
+str a, somaTemp
+ldr x, #2
+
+;loop para zerar as terceiras posicoes das triplas
+Loop_zera:
+	ldr a, loopCont
+	jz Segue
+	ldr a, #0
+	str a, hc5, x
+	ldr a, loopCont
+	sub a, #1
+	str a, loopCont
+	add x, #3
+	jmp Loop_zera
+	
+
+
+Segue:
+
+ldr x, #0
+
+ldr a, num
+str a, numCont
+
+
+
+Loop:
+	;verifica se já pode encerrar o programa (se já acabaram as triplas)
+	ldr a, numCont
+	jz Fim
+	
+	ldr a, hig ;faz a altura da parede - a altura da tripla
+	sub a, hc5, x
+	jn Caso_descarte ; se a altura da tripla for maior que a da parede, trata o descarte
+	jz Caso_nada ;caso a altura da tripla seja igual a altura da parede
+	jmp Caso_aquisicao ; caso a altura da tripla seja menor que a altura da parede	
+
+Caso_descarte:
+	;marca o terceiro valor da tripla como 0
+	add x, #2 
+	ldr a, #0
+	str a, hc5, x
+	sub x, #2
+	
+	;inicia uma variável que será decrementada de modo a possibilitar a multiplicacao
+	add x, #1
+	ldr a, hc5, x
+	str a, widDaTriplaTemp
+	sub x, #1
+
+Calculo_descarte: ;(hig - alturaDaTripla) -> NEGA -> *widDaTripla
+	ldr a, hig        
+	sub a, hc5, x
+	neg a
+	str a, somaTemp
+
+	ldr a, des   ;já soma o valor encontrado ao total de azulejos a serem descartados
+	add a, somaTemp
+	str a, des
+
+	
+	
+	ldr a, widDaTriplaTemp  ;loop pra fazer vezes o numero de colunas numero de colunas da tripla
+	sub a, #1
+	jz Continua_descarte  
+	str a, widDaTriplaTemp
+	jmp Calculo_descarte
+
+Continua_descarte:  ;faz as iteracoes necessarias pra continuar o loop 
+	add x, #3
+	ldr a, numCont
+	sub a, #1
+	str a, numCont
+	jmp Loop
+	
+
+Caso_nada:
+	;marca o terceiro valor da tripla como 0
+	add x, #2 
+	ldr a, #0
+	str a, hc5, x
+	sub x, #2
+
+	add x, #3
+	ldr a, numCont
+	sub a, #1
+	str a, numCont
+	jmp Loop
+
+Caso_aquisicao:
+	;inicia uma variável que será decrementada de modo a possibilitar a multiplicacao
+	add x, #1
+	ldr a, hc5, x
+	str a, widDaTriplaTemp
+	sub x, #1
+	
+Calculo_aquisicao:   ; (hig - alturaDaTripla) * widDaTripla
+	
+	ldr a, hig
+	sub a, hc5, x
+	str a, somaTemp
+	
+	ldr a, adq ;já soma o valor encontrado ao total de azulejos a serem adquiridos
+	add a, somaTemp
+	str a, adq
+		
+	add x, #2  ;soma o valor encontrado no 3 elemento da tripla
+	ldr a, hc5, x
+	add a, somaTemp
+	str a, hc5, x
+	sub x, #2
+	
+		
+	ldr a, widDaTriplaTemp  ;loop pra fazer vezes o numero de colunas da tripla
+	sub a, #1
+	jz Continua_aquisicao 
+	str a, widDaTriplaTemp
+	jmp Calculo_aquisicao
+
+Continua_aquisicao:
+	add x, #3
+	ldr a, numCont
+	sub a, #1
+	str a, numCont
+	jmp Loop
+	
+
+
+
+Fim:
+	hlt
